@@ -1,0 +1,24 @@
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Documents & report generators
+*.docx
+*.zip
+backend.zip
+*.tex
+create_report_docx.py
+generate_images.py
+
+# Python & scripts
+__pycache__/
+*.pyc
+
+# Maven / Java build artifacts
+backend/target/
+*.class
+
+# IDE configuration
+.vscode/
+.idea/
+*.iml
