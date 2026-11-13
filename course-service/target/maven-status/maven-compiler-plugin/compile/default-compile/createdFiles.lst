@@ -1,0 +1,5 @@
+com/skillhub/courseservice/model/Course.class
+com/skillhub/courseservice/repository/CourseRepository.class
+com/skillhub/courseservice/controller/CourseController.class
+com/skillhub/courseservice/CourseServiceApplication.class
+com/skillhub/courseservice/service/CourseService.class

@@ -1,0 +1,5 @@
+com/skillhub/userservice/repository/UserRepository.class
+com/skillhub/userservice/model/User.class
+com/skillhub/userservice/service/UserService.class
+com/skillhub/userservice/UserServiceApplication.class
+com/skillhub/userservice/controller/UserController.class

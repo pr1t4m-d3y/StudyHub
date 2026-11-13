@@ -1,5 +1,7 @@
 function App() {
   const API_BASE = 'http://localhost:8080/api';
+  const API_COURSE = 'http://localhost:8081/api';
+  const API_USER = 'http://localhost:8082/api';
 
   // --- 1. GLOBAL UI STATES ---
   const [activeTab, setActiveTab] = React.useState('Dashboard');
@@ -66,10 +68,16 @@ function App() {
   };
 
   const fetchSubjects = () => {
-    fetch(`${API_BASE}/subjects`)
+    // Attempt Course Microservice (port 8081) first, fallback to monolithic backend (port 8080)
+    fetch(`${API_COURSE}/subjects`)
       .then(res => res.json())
       .then(data => Array.isArray(data) && setSubjects(data))
-      .catch(err => console.error("Error fetching subjects:", err));
+      .catch(() => {
+        fetch(`${API_BASE}/subjects`)
+          .then(res => res.json())
+          .then(data => Array.isArray(data) && setSubjects(data))
+          .catch(err => console.error("Error fetching subjects:", err));
+      });
   };
 
   const fetchTimetable = () => {
@@ -118,10 +126,16 @@ function App() {
   };
 
   const fetchProfile = () => {
-    fetch(`${API_BASE}/profile`)
+    // Attempt User Microservice (port 8082) first, fallback to monolithic backend (port 8080)
+    fetch(`${API_USER}/profile`)
       .then(res => res.json())
       .then(data => data && setProfile(data))
-      .catch(err => console.error("Error fetching profile:", err));
+      .catch(() => {
+        fetch(`${API_BASE}/profile`)
+          .then(res => res.json())
+          .then(data => data && setProfile(data))
+          .catch(err => console.error("Error fetching profile:", err));
+      });
   };
 
   // --- 6. POMODORO TIMER LOGIC ---
@@ -219,7 +233,8 @@ function App() {
       syllabus: fd.get('syllabus')
     };
 
-    fetch(`${API_BASE}/subjects`, {
+    // Dual-write or prefer Course microservice
+    fetch(`${API_COURSE}/subjects`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newSub)
@@ -228,19 +243,36 @@ function App() {
       .then(() => {
         fetchSubjects();
         setActiveModal(null);
-        showToast('Subject added to database!');
+        showToast('Subject saved to Course Service (8081)!');
       })
-      .catch(() => showToast('Error adding subject', 'error'));
+      .catch(() => {
+        fetch(`${API_BASE}/subjects`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newSub)
+        })
+          .then(res => res.json())
+          .then(() => {
+            fetchSubjects();
+            setActiveModal(null);
+            showToast('Subject added to database!');
+          })
+          .catch(() => showToast('Error adding subject', 'error'));
+      });
   };
 
   const deleteSubject = (id) => {
     if (!confirm('Delete this subject?')) return;
-    fetch(`${API_BASE}/subjects/${id}`, { method: 'DELETE' })
-      .then(() => {
-        fetchSubjects();
-        showToast('Subject removed');
-      })
-      .catch(() => showToast('Error removing subject', 'error'));
+    fetch(`${API_COURSE}/subjects/${id}`, { method: 'DELETE' })
+      .catch(() => {})
+      .finally(() => {
+        fetch(`${API_BASE}/subjects/${id}`, { method: 'DELETE' })
+          .catch(() => {})
+          .finally(() => {
+            fetchSubjects();
+            showToast('Subject removed');
+          });
+      });
   };
 
   // Timetable
@@ -441,7 +473,8 @@ function App() {
       avatarInitials: (fd.get('fullName') || 'P D').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
     };
 
-    fetch(`${API_BASE}/profile`, {
+    // Save profile to User microservice (8082) with fallback to monolith (8080)
+    fetch(`${API_USER}/profile`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updated)
@@ -450,9 +483,22 @@ function App() {
       .then(data => {
         setProfile(data);
         setActiveModal(null);
-        showToast('Profile updated in database!');
+        showToast('Profile updated in User Service (8082)!');
       })
-      .catch(() => showToast('Error updating profile', 'error'));
+      .catch(() => {
+        fetch(`${API_BASE}/profile`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updated)
+        })
+          .then(res => res.json())
+          .then(data => {
+            setProfile(data);
+            setActiveModal(null);
+            showToast('Profile updated in database!');
+          })
+          .catch(() => showToast('Error updating profile', 'error'));
+      });
   };
 
   // Navigation Items
