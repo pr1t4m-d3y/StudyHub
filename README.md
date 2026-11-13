@@ -178,9 +178,9 @@ Total Marks = Internal Marks + External Marks
 
 The backend calculates the GPA summary using credits and grade points:
 
-\[
-\text{GPA} = \frac{\sum (\text{Credits} \times \text{Grade Points})}{\sum \text{Credits}}
-\]
+$$
+\mathrm{GPA} = \frac{\sum_{i=1}^{n} (\mathrm{Credits}_i \times \mathrm{GradePoints}_i)}{\sum_{i=1}^{n} \mathrm{Credits}_i}
+$$
 
 The result is rounded to two decimal places. The marks summary exposes total credits, SGPA, CGPA, and course count.
 
